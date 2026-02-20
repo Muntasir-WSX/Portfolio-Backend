@@ -25,6 +25,7 @@ async function run() {
     const db = client.db("muntasirPortfolio");
     const userCollection = db.collection("users");
     const projectCollection = db.collection("projects");
+    const educationCollection = db.collection("education");
 
     // User API (Admin Specific)
     app.post("/users", async (req, res) => {
@@ -75,10 +76,21 @@ async function run() {
 });
 
 
+// posting educations
+
+app.get("/education", async (req, res) => {
+  const result = await educationCollection.find().sort({ order: 1 }).toArray();
+  res.send(result);
+});
+
+app.post("/education", async (req, res) => {
+  const eduInfo = req.body;
+  const result = await educationCollection.insertOne(eduInfo);
+  res.send(result);
+});
 
 
-
-// delete a-z routes
+// delete a-z routes (projects,educations)
 
 app.delete("/projects/:id", async (req, res) => {
   const id = req.params.id;
@@ -87,8 +99,15 @@ app.delete("/projects/:id", async (req, res) => {
   res.send(result);
 });
 
+app.delete("/education/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await educationCollection.deleteOne(query);
+  res.send(result);
+});
 
-// edit a-z
+
+// edit a-z (Projects,Educations)
 
 app.patch("/projects/:id", async (req, res) => {
       const id = req.params.id;
@@ -100,6 +119,17 @@ app.patch("/projects/:id", async (req, res) => {
       const result = await projectCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
+    app.patch("/education/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedEdu = req.body;
+  const updateDoc = {
+    $set: updatedEdu,
+  };
+  const result = await educationCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
 
 
 
