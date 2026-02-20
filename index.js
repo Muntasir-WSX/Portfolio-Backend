@@ -26,6 +26,7 @@ async function run() {
     const userCollection = db.collection("users");
     const projectCollection = db.collection("projects");
     const educationCollection = db.collection("education");
+    const experienceCollection = db.collection("experience");
 
     // User API (Admin Specific)
     app.post("/users", async (req, res) => {
@@ -89,8 +90,20 @@ app.post("/education", async (req, res) => {
   res.send(result);
 });
 
+// posting experinece
+app.get("/experience", async (req, res) => {
+  const result = await experienceCollection.find().sort({ order: 1 }).toArray();
+  res.send(result);
+});
 
-// delete a-z routes (projects,educations)
+app.post("/experience", async (req, res) => {
+  const expInfo = req.body;
+  const result = await experienceCollection.insertOne(expInfo);
+  res.send(result);
+});
+
+
+// delete a-z routes (projects,educations,experience)
 
 app.delete("/projects/:id", async (req, res) => {
   const id = req.params.id;
@@ -105,6 +118,15 @@ app.delete("/education/:id", async (req, res) => {
   const result = await educationCollection.deleteOne(query);
   res.send(result);
 });
+
+app.delete("/experience/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await experienceCollection.deleteOne(query);
+  res.send(result);
+});
+
+
 
 
 // edit a-z (Projects,Educations)
@@ -128,6 +150,17 @@ app.patch("/projects/:id", async (req, res) => {
     $set: updatedEdu,
   };
   const result = await educationCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
+
+app.patch("/experience/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedExp = req.body;
+  const updateDoc = {
+    $set: updatedExp,
+  };
+  const result = await experienceCollection.updateOne(filter, updateDoc);
   res.send(result);
 });
 
