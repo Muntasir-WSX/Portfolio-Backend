@@ -27,6 +27,7 @@ async function run() {
     const projectCollection = db.collection("projects");
     const educationCollection = db.collection("education");
     const experienceCollection = db.collection("experience");
+    const certificatesCollection = db.collection("certificates"); 
 
     // User API (Admin Specific)
     app.post("/users", async (req, res) => {
@@ -103,6 +104,20 @@ app.post("/experience", async (req, res) => {
 });
 
 
+// posting Certificates
+
+app.get("/certificates", async (req, res) => {
+  const result = await certificatesCollection.find().sort({ order: 1 }).toArray();
+  res.send(result);
+});
+
+app.post("/certificates", async (req, res) => {
+  const certInfo = req.body;
+  const result = await certificatesCollection.insertOne(certInfo);
+  res.send(result);
+});
+
+
 // delete a-z routes (projects,educations,experience)
 
 app.delete("/projects/:id", async (req, res) => {
@@ -126,6 +141,12 @@ app.delete("/experience/:id", async (req, res) => {
   res.send(result);
 });
 
+app.delete("/certificates/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await certificatesCollection.deleteOne(query);
+  res.send(result);
+});
 
 
 
@@ -161,6 +182,17 @@ app.patch("/experience/:id", async (req, res) => {
     $set: updatedExp,
   };
   const result = await experienceCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
+
+app.patch("/certificates/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedCert = req.body;
+  const updateDoc = {
+    $set: updatedCert,
+  };
+  const result = await certificatesCollection.updateOne(filter, updateDoc);
   res.send(result);
 });
 
