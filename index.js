@@ -24,6 +24,7 @@ async function run() {
   try {
     const db = client.db("muntasirPortfolio");
     const userCollection = db.collection("users");
+    const projectCollection = db.collection("projects");
 
     // User API (Admin Specific)
     app.post("/users", async (req, res) => {
@@ -58,6 +59,49 @@ async function run() {
         user?.role === "admin" && email === "alimuntasir2001@gmail.com";
       res.send({ admin: isAdmin });
     });
+
+
+    // Posting Project API
+
+    app.get("/projects", async (req, res) => {
+      const result = await projectCollection.find().toArray();
+      res.send(result);
+    });
+
+  app.post("/projects", async (req, res) => {
+  const project = req.body;
+  const result = await projectCollection.insertOne(project);
+  res.send(result);
+});
+
+
+
+
+
+// delete a-z routes
+
+app.delete("/projects/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await projectCollection.deleteOne(query);
+  res.send(result);
+});
+
+
+// edit a-z
+
+app.patch("/projects/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedProject = req.body;
+      const updateDoc = {
+        $set: updatedProject,
+      };
+      const result = await projectCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+
 
     console.log("Connected to MongoDB!");
   } finally {
