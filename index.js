@@ -180,48 +180,65 @@ app.delete("/certificates/:id", async (req, res) => {
 
 // edit a-z (Projects,Educations)
 
+// Edit Projects
 app.patch("/projects/:id", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const updatedProject = req.body;
-      const updateDoc = {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const updatedProject = req.body;
+    
+    // Safety: বডি থেকে _id ডিলিট করছি যেন 500 Error না আসে
+    delete updatedProject._id; 
+
+    const updateDoc = {
         $set: updatedProject,
-      };
-      const result = await projectCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
-
-    app.patch("/education/:id", async (req, res) => {
-  const id = req.params.id;
-  const filter = { _id: new ObjectId(id) };
-  const updatedEdu = req.body;
-  const updateDoc = {
-    $set: updatedEdu,
-  };
-  const result = await educationCollection.updateOne(filter, updateDoc);
-  res.send(result);
+    };
+    const result = await projectCollection.updateOne(filter, updateDoc);
+    res.send(result);
 });
 
+// Edit Education
+app.patch("/education/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const updatedEdu = req.body;
+    
+    delete updatedEdu._id; 
+
+    const updateDoc = {
+        $set: updatedEdu,
+    };
+    const result = await educationCollection.updateOne(filter, updateDoc);
+    res.send(result);
+});
+
+// Edit Experience
 app.patch("/experience/:id", async (req, res) => {
-  const id = req.params.id;
-  const filter = { _id: new ObjectId(id) };
-  const updatedExp = req.body;
-  const updateDoc = {
-    $set: updatedExp,
-  };
-  const result = await experienceCollection.updateOne(filter, updateDoc);
-  res.send(result);
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const updatedExp = req.body;
+    
+    delete updatedExp._id; 
+
+    const updateDoc = {
+        $set: updatedExp,
+    };
+    const result = await experienceCollection.updateOne(filter, updateDoc);
+    res.send(result);
 });
 
+// Edit Certificates
 app.patch("/certificates/:id", async (req, res) => {
-  const id = req.params.id;
-  const filter = { _id: new ObjectId(id) };
-  const updatedCert = req.body;
-  const updateDoc = {
-    $set: updatedCert,
-  };
-  const result = await certificatesCollection.updateOne(filter, updateDoc);
-  res.send(result);
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const updatedCert = req.body;
+    
+    delete updatedCert._id; 
+
+    const updateDoc = {
+        $set: updatedCert,
+    };
+    const result = await certificatesCollection.updateOne(filter, updateDoc);
+    res.send(result);
 });
 
 
