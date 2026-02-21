@@ -9,6 +9,13 @@ const jwt = require("jsonwebtoken");
 
 // Middleware
 app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://your-frontend-link.vercel.app" // তোমার ফ্রন্টএন্ড ডেপ্লয় করলে সেই লিঙ্কটা এখানে দিয়ে দিবে
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // MongoDB Connection
