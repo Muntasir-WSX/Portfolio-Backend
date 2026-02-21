@@ -155,7 +155,7 @@ async function run() {
 
     //posting Message (Client)
 
-    app.post("/messages", verifyToken, async (req, res) => {
+    app.post("/messages", async (req, res) => {
       const message = req.body;
       const result = await messagesCollection.insertOne(message);
       res.send(result);
