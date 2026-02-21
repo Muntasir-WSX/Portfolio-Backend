@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const jwt = require("jsonwebtoken");
 
 // Middleware
 app.use(cors());
@@ -28,10 +29,38 @@ async function run() {
     const educationCollection = db.collection("education");
     const experienceCollection = db.collection("experience");
     const certificatesCollection = db.collection("certificates");
-    const messagesCollection = client.db("portfolioDB").collection("messages"); 
+    const messagesCollection = client.db("portfolioDB").collection("messages");
+    
+
+    // Middlweare Function
+
+    const verifyToken = (req, res, next) => {
+      if (!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+      const token = req.headers.authorization.split(" ")[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: "unauthorized access" });
+        }
+        req.decoded = decoded;
+        next();
+      });
+    };
+
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
+
+
 
     // User API (Admin Specific)
-    app.post("/users", async (req, res) => {
+    app.post("/users", verifyToken, async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
 
@@ -64,7 +93,6 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-
     // Posting Project API
 
     app.get("/projects", async (req, res) => {
@@ -72,176 +100,176 @@ async function run() {
       res.send(result);
     });
 
-  app.post("/projects", async (req, res) => {
-  const project = req.body;
-  const result = await projectCollection.insertOne(project);
-  res.send(result);
-});
+    app.post("/projects", verifyToken, async (req, res) => {
+      const project = req.body;
+      const result = await projectCollection.insertOne(project);
+      res.send(result);
+    });
 
+    // posting educations
 
-// posting educations
+    app.get("/education", async (req, res) => {
+      const result = await educationCollection
+        .find()
+        .sort({ order: 1 })
+        .toArray();
+      res.send(result);
+    });
 
-app.get("/education", async (req, res) => {
-  const result = await educationCollection.find().sort({ order: 1 }).toArray();
-  res.send(result);
-});
+    app.post("/education", verifyToken, async (req, res) => {
+      const eduInfo = req.body;
+      const result = await educationCollection.insertOne(eduInfo);
+      res.send(result);
+    });
 
-app.post("/education", async (req, res) => {
-  const eduInfo = req.body;
-  const result = await educationCollection.insertOne(eduInfo);
-  res.send(result);
-});
+    // posting experinece
+    app.get("/experience", async (req, res) => {
+      const result = await experienceCollection
+        .find()
+        .sort({ order: 1 })
+        .toArray();
+      res.send(result);
+    });
 
-// posting experinece
-app.get("/experience", async (req, res) => {
-  const result = await experienceCollection.find().sort({ order: 1 }).toArray();
-  res.send(result);
-});
+    app.post("/experience", verifyToken, async (req, res) => {
+      const expInfo = req.body;
+      const result = await experienceCollection.insertOne(expInfo);
+      res.send(result);
+    });
 
-app.post("/experience", async (req, res) => {
-  const expInfo = req.body;
-  const result = await experienceCollection.insertOne(expInfo);
-  res.send(result);
-});
+    // posting Certificates
 
+    app.get("/certificates",  async (req, res) => {
+      const result = await certificatesCollection
+        .find()
+        .sort({ order: 1 })
+        .toArray();
+      res.send(result);
+    });
 
-// posting Certificates
+    app.post("/certificates", verifyToken, async (req, res) => {
+      const certInfo = req.body;
+      const result = await certificatesCollection.insertOne(certInfo);
+      res.send(result);
+    });
 
-app.get("/certificates", async (req, res) => {
-  const result = await certificatesCollection.find().sort({ order: 1 }).toArray();
-  res.send(result);
-});
+    //posting Message (Client)
 
-app.post("/certificates", async (req, res) => {
-  const certInfo = req.body;
-  const result = await certificatesCollection.insertOne(certInfo);
-  res.send(result);
-});
+    app.post("/messages", verifyToken, async (req, res) => {
+      const message = req.body;
+      const result = await messagesCollection.insertOne(message);
+      res.send(result);
+    });
 
+    app.get("/messages", async (req, res) => {
+      const page = parseInt(req.query.page) || 0;
+      const size = parseInt(req.query.size) || 10;
 
-//posting Message (Client)
-
-app.post("/messages", async (req, res) => {
-    const message = req.body;
-    const result = await messagesCollection.insertOne(message);
-    res.send(result);
-});
-
-app.get("/messages", async (req, res) => {
-    const page = parseInt(req.query.page) || 0; 
-    const size = parseInt(req.query.size) || 10;
-
-    const result = await messagesCollection.find()
+      const result = await messagesCollection
+        .find()
         .sort({ _id: -1 })
-        .skip(page * size) 
-        .limit(size)      
+        .skip(page * size)
+        .limit(size)
         .toArray();
 
-    res.send(result);
-});
+      res.send(result);
+    });
 
-app.get("/messagesCount", async (req, res) => {
-    const count = await messagesCollection.estimatedDocumentCount();
-    res.send({ count });
-});
+    app.get("/messagesCount", async (req, res) => {
+      const count = await messagesCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
 
+    // delete a-z routes (projects,educations,experience)
 
-// delete a-z routes (projects,educations,experience)
+    app.delete("/projects/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await projectCollection.deleteOne(query);
+      res.send(result);
+    });
 
-app.delete("/projects/:id", async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await projectCollection.deleteOne(query);
-  res.send(result);
-});
+    app.delete("/education/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await educationCollection.deleteOne(query);
+      res.send(result);
+    });
 
-app.delete("/education/:id", async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await educationCollection.deleteOne(query);
-  res.send(result);
-});
+    app.delete("/experience/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await experienceCollection.deleteOne(query);
+      res.send(result);
+    });
 
-app.delete("/experience/:id", async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await experienceCollection.deleteOne(query);
-  res.send(result);
-});
+    app.delete("/certificates/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await certificatesCollection.deleteOne(query);
+      res.send(result);
+    });
 
-app.delete("/certificates/:id", async (req, res) => {
-  const id = req.params.id;
-  const query = { _id: new ObjectId(id) };
-  const result = await certificatesCollection.deleteOne(query);
-  res.send(result);
-});
+    // edit a-z (Projects,Educations)
 
+    // Edit Projects
+    app.patch("/projects/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedProject = req.body;
+      delete updatedProject._id;
 
-
-// edit a-z (Projects,Educations)
-
-// Edit Projects
-app.patch("/projects/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updatedProject = req.body;
-    
-    // Safety: বডি থেকে _id ডিলিট করছি যেন 500 Error না আসে
-    delete updatedProject._id; 
-
-    const updateDoc = {
+      const updateDoc = {
         $set: updatedProject,
-    };
-    const result = await projectCollection.updateOne(filter, updateDoc);
-    res.send(result);
-});
+      };
+      const result = await projectCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
-// Edit Education
-app.patch("/education/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updatedEdu = req.body;
-    
-    delete updatedEdu._id; 
+    // Edit Education
+    app.patch("/education/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedEdu = req.body;
 
-    const updateDoc = {
+      delete updatedEdu._id;
+
+      const updateDoc = {
         $set: updatedEdu,
-    };
-    const result = await educationCollection.updateOne(filter, updateDoc);
-    res.send(result);
-});
+      };
+      const result = await educationCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
-// Edit Experience
-app.patch("/experience/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updatedExp = req.body;
-    
-    delete updatedExp._id; 
+    // Edit Experience
+    app.patch("/experience/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedExp = req.body;
 
-    const updateDoc = {
+      delete updatedExp._id;
+
+      const updateDoc = {
         $set: updatedExp,
-    };
-    const result = await experienceCollection.updateOne(filter, updateDoc);
-    res.send(result);
-});
+      };
+      const result = await experienceCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
-// Edit Certificates
-app.patch("/certificates/:id", async (req, res) => {
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updatedCert = req.body;
-    
-    delete updatedCert._id; 
+    // Edit Certificates
+    app.patch("/certificates/:id",verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedCert = req.body;
 
-    const updateDoc = {
+      delete updatedCert._id;
+
+      const updateDoc = {
         $set: updatedCert,
-    };
-    const result = await certificatesCollection.updateOne(filter, updateDoc);
-    res.send(result);
-});
-
-
+      };
+      const result = await certificatesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     console.log("Connected to MongoDB!");
   } finally {
