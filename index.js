@@ -27,7 +27,8 @@ async function run() {
     const projectCollection = db.collection("projects");
     const educationCollection = db.collection("education");
     const experienceCollection = db.collection("experience");
-    const certificatesCollection = db.collection("certificates"); 
+    const certificatesCollection = db.collection("certificates");
+    const messagesCollection = client.db("portfolioDB").collection("messages"); 
 
     // User API (Admin Specific)
     app.post("/users", async (req, res) => {
@@ -115,6 +116,33 @@ app.post("/certificates", async (req, res) => {
   const certInfo = req.body;
   const result = await certificatesCollection.insertOne(certInfo);
   res.send(result);
+});
+
+
+//posting Message (Client)
+
+app.post("/messages", async (req, res) => {
+    const message = req.body;
+    const result = await messagesCollection.insertOne(message);
+    res.send(result);
+});
+
+app.get("/messages", async (req, res) => {
+    const page = parseInt(req.query.page) || 0; 
+    const size = parseInt(req.query.size) || 10;
+
+    const result = await messagesCollection.find()
+        .sort({ _id: -1 })
+        .skip(page * size) 
+        .limit(size)      
+        .toArray();
+
+    res.send(result);
+});
+
+app.get("/messagesCount", async (req, res) => {
+    const count = await messagesCollection.estimatedDocumentCount();
+    res.send({ count });
 });
 
 
