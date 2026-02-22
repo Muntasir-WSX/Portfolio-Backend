@@ -12,7 +12,7 @@ app.use(cors());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://your-frontend-link.vercel.app" // তোমার ফ্রন্টএন্ড ডেপ্লয় করলে সেই লিঙ্কটা এখানে দিয়ে দিবে
+    "https://myportfolio-ea142.web.app/" 
   ],
   credentials: true
 }));
@@ -107,7 +107,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/projects", verifyToken, async (req, res) => {
+    app.post("/projects",  async (req, res) => {
       const project = req.body;
       const result = await projectCollection.insertOne(project);
       res.send(result);
