@@ -11,7 +11,7 @@ const jwt = require("jsonwebtoken");
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://myportfolio-ea142.web.app/" 
+    "https://myportfolio-ea142.web.app",
   ],
   credentials: true
 }));
@@ -96,6 +96,17 @@ async function run() {
     });
 
     // Posting Project API
+
+app.get("/projects", async (req, res) => {
+  try {
+    const result = await projectCollection.find().toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).send({ message: "Server error fetching projects" });
+  }
+});
+
 
   // Get Single Project by ID
 // Get Single Project by ID
