@@ -8,7 +8,6 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 
 // Middleware
-app.use(cors());
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -62,10 +61,6 @@ async function run() {
       });
       res.send({ token });
     });
-
-
-
-
     // User API (Admin Specific)
     app.post("/users", verifyToken, async (req, res) => {
       const user = req.body;
@@ -102,10 +97,30 @@ async function run() {
 
     // Posting Project API
 
-    app.get("/projects", async (req, res) => {
-      const result = await projectCollection.find().toArray();
-      res.send(result);
-    });
+  // Get Single Project by ID
+// Get Single Project by ID
+app.get("/projects/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    // Check if valid ObjectId
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid Project ID format" });
+    }
+
+    const query = { _id: new ObjectId(id) };
+    const result = await projectCollection.findOne(query);
+
+    if (!result) {
+      return res.status(404).send({ message: "Project not found" });
+    }
+
+    res.send(result);
+  } catch (error) {
+    console.error("Error fetching single project:", error);
+    res.status(500).send({ message: "Server error while fetching project" });
+  }
+});
 
     app.post("/projects",  async (req, res) => {
       const project = req.body;
